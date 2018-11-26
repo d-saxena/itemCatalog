@@ -14,6 +14,14 @@ class BookCategory(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(250), nullable=False)
 
+    @property
+    def serialize(self):
+        """Return object data in easily serializeable format"""
+        return {
+            'name': self.name,
+            'id': self.id,
+        }
+
 
 class Book(Base):
     __tablename__ = 'book'
@@ -25,6 +33,17 @@ class Book(Base):
     language = Column(String(250))
     bookCategory_id = Column(Integer, ForeignKey('bookCategory.id'))
     bookCategory = relationship(BookCategory)
+
+    @property
+    def serialize(self):
+        """Return object data in easily serializeable format"""
+        return {
+            'name': self.name,
+            'description': self.description,
+            'id': self.id,
+            'price': self.price,
+            'language': self.language,
+        }
 
 
 engine = create_engine('sqlite:///bookstore.db')
