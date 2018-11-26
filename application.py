@@ -11,6 +11,18 @@ Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
+@app.route('/bookCategory/<int:bookCategory_id>/books/JSON')
+def bookCategoryJSON(bookCategory_id):
+    bookCategory = session.query(BookCategory).filter_by(id=bookCategory_id).one()
+    books = session.query(Book).filter_by(
+        bookCategory_id=bookCategory_id).all()
+    return jsonify(Books=[i.serialize for i in books])
+
+@app.route('/bookCategory/<int:bookCategory_id>/books/<int:book_id>/JSON')
+def bookJSON(bookCategory_id, book_id):
+    book = session.query(Book).filter_by(id=book_id).one()
+    return jsonify(Book=book.serialize)   
+
 @app.route('/')
 @app.route('/bookCategory/<int:bookCategory_id>/')
 def listofbooks(bookCategory_id):
