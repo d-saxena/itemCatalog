@@ -200,7 +200,7 @@ def editBookCategory(bookCategory_id):
 
 # Delete a Book Category
 @app.route('/bookCategory/<int:bookCategory_id>/delete/', methods=['GET', 'POST'])
-def deleteRestaurant(restaurant_id):
+def deleteBookCategory(bookCategory_id):
     if 'username' not in login_session:
         return redirect('/login')
     bookCategoryToDelete = session.query(
