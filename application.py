@@ -156,23 +156,125 @@ def bookCategoryJSON(bookCategory_id):
 @app.route('/bookCategory/<int:bookCategory_id>/books/<int:book_id>/JSON')
 def bookJSON(bookCategory_id, book_id):
     book = session.query(Book).filter_by(id=book_id).one()
-    return jsonify(Book=book.serialize)   
+    return jsonify(Book=book.serialize)  
+
+@app.route('/bookCategory/JSON')
+def bookCategoriesJSON():
+    bookCategories = session.query(BookCategory).all()
+    return jsonify(BookCategories=[b.serialize for b in bookCategories])
 
 @app.route('/')
+@app.route('/bookCategory/')
+def showBookCategories():
+    bookCategories = session.query(BookCategory).order_by(asc(BookCategory.name))
+    #return render_template('bookCategories.html', bookCategories=bookCategories)
+
+# Create a new book category
+@app.route('/bookCategory/new/', methods=['GET', 'POST'])
+def newBookCategory():
+    if 'username' not in login_session:
+        return redirect('/login')
+    if request.method == 'POST':
+        newBookCategory = BookCategory(name=request.form['name'])
+        session.add(newBookCategory)
+        flash('New Book Category %s Successfully Created' % newBookCategory.name)
+        session.commit()
+        return redirect(url_for('showBookCategories'))
+    #else:
+        #return render_template('newBookCategory.html')
+
+# Edit a Book Category
+@app.route('/bookCategory/<int:bookCategory_id>/edit/', methods=['GET', 'POST'])
+def editBookCategory(bookCategory_id):
+    if 'username' not in login_session:
+        return redirect('/login')
+    editedBookCategory = session.query(
+        BookCategory).filter_by(id=bookCategory_id).one()
+    if request.method == 'POST':
+        if request.form['name']:
+            editedBookCategory.name = request.form['name']
+            flash('Book Category Successfully Edited %s' % editedBookCategory.name)
+            return redirect(url_for('showBookCategories'))
+    #else:
+        #return render_template('editBookCategory.html', bookCategory=editedBookCategory)
+
+# Delete a Book Category
+@app.route('/bookCategory/<int:bookCategory_id>/delete/', methods=['GET', 'POST'])
+def deleteRestaurant(restaurant_id):
+    if 'username' not in login_session:
+        return redirect('/login')
+    bookCategoryToDelete = session.query(
+        BookCategory).filter_by(id=bookCategory_id).one()
+    if request.method == 'POST':
+        session.delete(bookCategoryToDelete)
+        flash('%s Successfully Deleted' % bookCategoryToDelete.name)
+        session.commit()
+        return redirect(url_for('showBookCategories', bookCategory_id=bookCategory_id))
+    #else:
+        #return render_template('deleteBookCategory.html', bookCategory=bookCategoryToDelete)        
+
 @app.route('/bookCategory/<int:bookCategory_id>/')
-def listofbooks(bookCategory_id):
-    bookCategory = session.query(BookCategory).filter_by(id = bookCategory_id).one()
-    books = session.query(Book).filter_by(bookCategory_id=bookCategory_id)
-    output = ''
-    for i in books:
-        output += i.name
-        output += '</br>'
-        output += i.price
-        output += '</br>'
-        output += i.description
-        output += '</br>'
-        output += '</br>'       
-    return output
+@app.route('/bookCategory/<int:bookCategory_id>/books/')
+def showBooks(bookCategory_id):
+    bookCategory = session.query(BookCategory).filter_by(id=bookCategory_id).one()
+    books = session.query(Book).filter_by(
+        bookCategory_id=bookCategory_id).all()
+    #return render_template('books.html', books=books, bookCategory=bookCategory)
+
+# Create a new book
+@app.route('/bookCategory/<int:bookCategory_id>/books/new/', methods=['GET', 'POST'])
+def newBook(bookCategory_id):
+    if 'username' not in login_session:
+        return redirect('/login')
+    bookCategory = session.query(BookCategory).filter_by(id=bookCategory_id).one()
+    if request.method == 'POST':
+        newBook = Book(name=request.form['name'], description=request.form[
+                           'description'], price=request.form['price'], language=request.form['language'], bookCategory_id=bookCategory_id)
+        session.add(newBook)
+        session.commit()
+        flash('New Book %s Successfully Created' % (newBook.name))
+        return redirect(url_for('showBookCategory', bookCategory_id=bookCategory_id))
+    #else:
+        #return render_template('newBook.html', bookCategory_id=bookCategory_id)
+
+# Edit a book
+@app.route('/bookCategory/<int:bookCategory_id>/books/<int:book_id>/edit', methods=['GET', 'POST'])
+def editBook(bookCategory_id, book_id):
+    if 'username' not in login_session:
+        return redirect('/login')
+    editedBook = session.query(Book).filter_by(id=book_id).one()
+    bookCategory = session.query(BookCategory).filter_by(id=bookCategory_id).one()
+    if request.method == 'POST':
+        if request.form['name']:
+            editedBook.name = request.form['name']
+        if request.form['description']:
+            editedBook.description = request.form['description']
+        if request.form['price']:
+            editedBook.price = request.form['price']
+        if request.form['language']:
+            editedBook.course = request.form['language']
+        session.add(editedBook)
+        session.commit()
+        flash('Book Successfully Edited')
+        return redirect(url_for('showBooks', bookCategory_id=bookCategory_id))
+    #   else:
+        #return render_template('editBook.html', bookCategory_id=bookCategory_id, book_id=book_id, book=editedBook)
+
+# Delete a book
+@app.route('/bookCategory/<int:bookCategory_id>/books/<int:book_id>/delete', methods=['GET', 'POST'])
+def deleteBook(bookCategory_id, book_id):
+    if 'username' not in login_session:
+        return redirect('/login')
+    bookCategory = session.query(BookCategory).filter_by(id=bookCategory_id).one()
+    bookToDelete = session.query(Book).filter_by(id=book_id).one()
+    if request.method == 'POST':
+        session.delete(bookToDelete)
+        session.commit()
+        flash('Book Successfully Deleted')
+        return redirect(url_for('showBooks', bookCategory_id=bookCategory_id))
+    #else:
+        #return render_template('deleteBook.html', item=bookToDelete)        
+
 
 if __name__ == '__main__':
     app.secret_key = 'super_secret_key'
