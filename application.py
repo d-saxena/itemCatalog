@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify, flash
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, asc
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, BookCategory, Book
 from flask import session as login_session
@@ -30,8 +30,7 @@ def showLogin():
     state = ''.join(random.choice(string.ascii_uppercase + string.digits)
                     for x in xrange(32))
     login_session['state'] = state
-    #return "The current session state is %s" % login_session['state']
-    return render_template('catalogMenu.html', STATE=state)
+    return render_template('bookStoreLogin.html', STATE=state)
 
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
@@ -138,9 +137,8 @@ def gdisconnect():
         del login_session['username']
         del login_session['email']
         del login_session['picture']
-        response = make_response(json.dumps('Successfully disconnected.'), 200)
-        response.headers['Content-Type'] = 'application/json'
-        return response
+        flash("You have successfully been logged out.")
+        return redirect(url_for('showBookCategories'))
     else:
         response = make_response(json.dumps('Failed to revoke token for given user.', 400))
         response.headers['Content-Type'] = 'application/json'
@@ -148,6 +146,8 @@ def gdisconnect():
 
 @app.route('/bookCategory/<int:bookCategory_id>/books/JSON')
 def bookCategoryJSON(bookCategory_id):
+    DBSession = sessionmaker(bind=engine)
+    session = DBSession()
     bookCategory = session.query(BookCategory).filter_by(id=bookCategory_id).one()
     books = session.query(Book).filter_by(
         bookCategory_id=bookCategory_id).all()
@@ -155,19 +155,25 @@ def bookCategoryJSON(bookCategory_id):
 
 @app.route('/bookCategory/<int:bookCategory_id>/books/<int:book_id>/JSON')
 def bookJSON(bookCategory_id, book_id):
+    DBSession = sessionmaker(bind=engine)
+    session = DBSession()
     book = session.query(Book).filter_by(id=book_id).one()
     return jsonify(Book=book.serialize)  
 
 @app.route('/bookCategory/JSON')
 def bookCategoriesJSON():
+    DBSession = sessionmaker(bind=engine)
+    session = DBSession()
     bookCategories = session.query(BookCategory).all()
     return jsonify(BookCategories=[b.serialize for b in bookCategories])
 
 @app.route('/')
 @app.route('/bookCategory/')
 def showBookCategories():
+    DBSession = sessionmaker(bind=engine)
+    session = DBSession()
     bookCategories = session.query(BookCategory).order_by(asc(BookCategory.name))
-    #return render_template('bookCategories.html', bookCategories=bookCategories)
+    return render_template('bookCategories.html', bookCategories=bookCategories)
 
 # Create a new book category
 @app.route('/bookCategory/new/', methods=['GET', 'POST'])
@@ -175,34 +181,42 @@ def newBookCategory():
     if 'username' not in login_session:
         return redirect('/login')
     if request.method == 'POST':
+        DBSession = sessionmaker(bind=engine)
+        session = DBSession()
         newBookCategory = BookCategory(name=request.form['name'])
         session.add(newBookCategory)
         flash('New Book Category %s Successfully Created' % newBookCategory.name)
         session.commit()
         return redirect(url_for('showBookCategories'))
-    #else:
-        #return render_template('newBookCategory.html')
+    else:
+        return render_template('newBookCategory.html')
 
 # Edit a Book Category
 @app.route('/bookCategory/<int:bookCategory_id>/edit/', methods=['GET', 'POST'])
 def editBookCategory(bookCategory_id):
     if 'username' not in login_session:
         return redirect('/login')
+    DBSession = sessionmaker(bind=engine)
+    session = DBSession()        
     editedBookCategory = session.query(
         BookCategory).filter_by(id=bookCategory_id).one()
     if request.method == 'POST':
         if request.form['name']:
             editedBookCategory.name = request.form['name']
+            session.add(editedBookCategory)
             flash('Book Category Successfully Edited %s' % editedBookCategory.name)
+            session.commit()
             return redirect(url_for('showBookCategories'))
-    #else:
-        #return render_template('editBookCategory.html', bookCategory=editedBookCategory)
+    else:
+        return render_template('editBookCategory.html', bookCategory=editedBookCategory)
 
 # Delete a Book Category
 @app.route('/bookCategory/<int:bookCategory_id>/delete/', methods=['GET', 'POST'])
 def deleteBookCategory(bookCategory_id):
     if 'username' not in login_session:
         return redirect('/login')
+    DBSession = sessionmaker(bind=engine)
+    session = DBSession()    
     bookCategoryToDelete = session.query(
         BookCategory).filter_by(id=bookCategory_id).one()
     if request.method == 'POST':
@@ -210,22 +224,26 @@ def deleteBookCategory(bookCategory_id):
         flash('%s Successfully Deleted' % bookCategoryToDelete.name)
         session.commit()
         return redirect(url_for('showBookCategories', bookCategory_id=bookCategory_id))
-    #else:
-        #return render_template('deleteBookCategory.html', bookCategory=bookCategoryToDelete)        
+    else:
+        return render_template('deleteBookCategory.html', bookCategory=bookCategoryToDelete)        
 
 @app.route('/bookCategory/<int:bookCategory_id>/')
 @app.route('/bookCategory/<int:bookCategory_id>/books/')
 def showBooks(bookCategory_id):
+    DBSession = sessionmaker(bind=engine)
+    session = DBSession()
     bookCategory = session.query(BookCategory).filter_by(id=bookCategory_id).one()
     books = session.query(Book).filter_by(
         bookCategory_id=bookCategory_id).all()
-    #return render_template('books.html', books=books, bookCategory=bookCategory)
+    return render_template('books.html', books=books, bookCategory=bookCategory)
 
 # Create a new book
 @app.route('/bookCategory/<int:bookCategory_id>/books/new/', methods=['GET', 'POST'])
 def newBook(bookCategory_id):
     if 'username' not in login_session:
         return redirect('/login')
+    DBSession = sessionmaker(bind=engine)
+    session = DBSession()
     bookCategory = session.query(BookCategory).filter_by(id=bookCategory_id).one()
     if request.method == 'POST':
         newBook = Book(name=request.form['name'], description=request.form[
@@ -233,15 +251,17 @@ def newBook(bookCategory_id):
         session.add(newBook)
         session.commit()
         flash('New Book %s Successfully Created' % (newBook.name))
-        return redirect(url_for('showBookCategory', bookCategory_id=bookCategory_id))
-    #else:
-        #return render_template('newBook.html', bookCategory_id=bookCategory_id)
+        return redirect(url_for('showBookCategories', bookCategory_id=bookCategory_id))
+    else:
+        return render_template('newBook.html', bookCategory_id=bookCategory_id)
 
 # Edit a book
 @app.route('/bookCategory/<int:bookCategory_id>/books/<int:book_id>/edit', methods=['GET', 'POST'])
 def editBook(bookCategory_id, book_id):
     if 'username' not in login_session:
         return redirect('/login')
+    DBSession = sessionmaker(bind=engine)
+    session = DBSession()
     editedBook = session.query(Book).filter_by(id=book_id).one()
     bookCategory = session.query(BookCategory).filter_by(id=bookCategory_id).one()
     if request.method == 'POST':
@@ -257,14 +277,16 @@ def editBook(bookCategory_id, book_id):
         session.commit()
         flash('Book Successfully Edited')
         return redirect(url_for('showBooks', bookCategory_id=bookCategory_id))
-    #   else:
-        #return render_template('editBook.html', bookCategory_id=bookCategory_id, book_id=book_id, book=editedBook)
+    else:
+        return render_template('editBook.html', bookCategory_id=bookCategory_id, book_id=book_id, book=editedBook)
 
 # Delete a book
 @app.route('/bookCategory/<int:bookCategory_id>/books/<int:book_id>/delete', methods=['GET', 'POST'])
 def deleteBook(bookCategory_id, book_id):
     if 'username' not in login_session:
         return redirect('/login')
+    DBSession = sessionmaker(bind=engine)
+    session = DBSession()    
     bookCategory = session.query(BookCategory).filter_by(id=bookCategory_id).one()
     bookToDelete = session.query(Book).filter_by(id=book_id).one()
     if request.method == 'POST':
@@ -272,9 +294,8 @@ def deleteBook(bookCategory_id, book_id):
         session.commit()
         flash('Book Successfully Deleted')
         return redirect(url_for('showBooks', bookCategory_id=bookCategory_id))
-    #else:
-        #return render_template('deleteBook.html', item=bookToDelete)        
-
+    else:
+        return render_template('deleteBook.html', book=bookToDelete)        
 
 if __name__ == '__main__':
     app.secret_key = 'super_secret_key'
