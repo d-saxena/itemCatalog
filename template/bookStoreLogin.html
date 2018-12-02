@@ -7,8 +7,29 @@
 <script src="//apis.google.com/js/platform.js?onload=start"> </script>
 </head>
 
+{% extends "bookStoreMainPage.html" %}
+{% block content %}
+{% include "bookStoreHeader.html" %}
 
 <body>  
+<div class="row banner main">
+  <div class="col-md-1"></div>
+  <div class="col-md-11 padding-none">
+    <h1>Welcome to Login </h1>
+  </div>
+</div>
+<br>
+<div class="row">
+  <div class="col-md-2"></div>
+  <div class="col-md-8">
+    <div id="result"></div>
+  </div>
+  <div class="col-md-2"></div>
+</div>
+<div class="row">
+  <div class="col-md-1"></div>
+  <div class="col-md-2">
+
 <!-- GOOGLE PLUS SIGN IN-->      
           <div id="signinButton">
           <span class="g-signin"
@@ -41,7 +62,7 @@ function signInCallback(authResult) {
         if (result) {
           $('#result').html('Login Successful!</br>'+ result + '</br>Redirecting...')
          setTimeout(function() {
-          window.location.href = "/bookCategory/1";
+          window.location.href = "/bookCategory/";
          }, 4000);
           
       } else if (authResult['error']) {
@@ -55,5 +76,5 @@ function signInCallback(authResult) {
 </script>
 
   </body>
-
+  {% endblock %}
   </html>
