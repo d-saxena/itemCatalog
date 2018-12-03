@@ -6,13 +6,7 @@
 	</div>
 	<div class="row banner menu">
 		<div class="col-md-11 col-md-offset-1 padding-none">
-			<h1>{{ bookCategory.name }}
-			<figure class="creator">
-				<img src="{{ url_for('static', filename='blank_user.gif') }}">
-				<figcaption>Creator's name goes here</figcaption>
-			</figure>
-			</h1>
-
+			<h1>{{ bookCategory.name }}</h1>
 		</div>
 	</div>
 
@@ -39,7 +33,7 @@
 			</a>
 			<a href="{{url_for('newBook', bookCategory_id = bookCategory.id )}}">
 				<button class="btn btn-default" id="new-book">
-					<span class="glyphicon glyphicon-glass" aria-hidden="true"></span>Add Book
+					<span class="glyphicon glyphicon-file" aria-hidden="true"></span>Add Book
 				</button>
 			</a>
 			<a href="{{url_for('deleteBookCategory', bookCategory_id = bookCategory.id )}}">
