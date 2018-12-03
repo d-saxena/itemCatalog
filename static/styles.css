@@ -6,7 +6,7 @@
 h1 {
 	font-family: "Helvetica Neue Light", Roboto, Helvetica, Arial, sans-serif;
 	font-size: 50px;
-	color: #51453B;
+	color: rgb(12, 12, 12);
 	line-height: 60px;
 	font-weight: 300;
 }
@@ -56,19 +56,19 @@ h3 {
 .btn {
 	padding: 20px;
 	margin: 0;
-	border-color: #9FB80A;
+	border-color: rgb(7, 7, 7);
 	border-width: 2px;
-	color: #9FB80A;;
+	color: rgb(7, 7, 7);
 }
 .btn:hover {
-	border-color: #9FB80A;
+	border-color:  rgb(7, 7, 7);
 }
 .btn.delete {
-	border-color: #aaaaaa;
-	color: #aaaaaa;
+	border-color: rgb(7, 7, 7);
+	color: rgb(7, 7, 7);
 }
 .btn.delete:hover {
-	border-color: #aaaaaa;
+	border-color: rgb(7, 7, 7);
 	color: red;
 }
 .glyphicon {
@@ -100,7 +100,7 @@ h3 {
 }
 .banner.main {
 	height: 150px;
-	background: url("/static/Watervalley-Books-Website-Header-1.jpg");
+	background: #42C3C9;
 	background-position: right;
 	background-repeat: no-repeat;
 	background-size: cover;
