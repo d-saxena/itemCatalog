@@ -219,7 +219,12 @@ def deleteBookCategory(bookCategory_id):
     session = DBSession()    
     bookCategoryToDelete = session.query(
         BookCategory).filter_by(id=bookCategory_id).one()
+    books = session.query(Book).filter_by(
+        bookCategory_id=bookCategory_id).all()          
     if request.method == 'POST':
+        for b in books:
+            session.delete(b)
+            session.commit()
         session.delete(bookCategoryToDelete)
         flash('%s Successfully Deleted' % bookCategoryToDelete.name)
         session.commit()
@@ -272,7 +277,7 @@ def editBook(bookCategory_id, book_id):
         if request.form['price']:
             editedBook.price = request.form['price']
         if request.form['language']:
-            editedBook.course = request.form['language']
+            editedBook.language = request.form['language']
         session.add(editedBook)
         session.commit()
         flash('Book Successfully Edited')
