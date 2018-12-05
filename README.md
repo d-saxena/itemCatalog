@@ -17,7 +17,7 @@ It is an application that provides a list of books within a variety of categorie
 
 - Download and unzip this file:https://s3.amazonaws.com/video.udacity-data.com/topher/2018/April/5acfbfa3_fsnd-virtual-machine/fsnd-virtual-machine.zip This will give you a directory called FSND-Virtual-Machine. It may be located inside your Downloads folder.
 
-Alternately, you can use Github to fork and clone the repository https://github.com/udacity/fullstack-nanodegree-vm.
+  Alternately, you can use Github to fork and clone the repository https://github.com/udacity/fullstack-nanodegree-vm.
 
 - cd into this(FSND_Virtual_Machine) directory
 
@@ -26,3 +26,29 @@ Alternately, you can use Github to fork and clone the repository https://github.
 - Bring the VM up with the command vagrant up
 
 - Log into the VM with vagrant ssh
+
+### Steps to run the project
+1 Clone the following repository : https://github.com/d-saxena/itemCatalog 
+
+2. Copy the itemCatalog into the FSND_Virtual_Machine/vagrant directory that you have created before.
+
+3. Open a terminal from the FSND_Virtual_Machine/vagrant directory, or simply open a terminal window and cd into that directory.
+
+4. Run vagrant ssh to log in to the VM.
+   **vagrant ssh**
+
+5. cd to the vagrant subdirectory
+   **cd /vagrant**
+
+6. cd to the cloned directory
+
+7. Run the following command to setup the DB:
+   **python database_setup.py**
+  
+8. Run the following command to insert books into your DB.
+   **python database_insert.py**
+  
+9. Run the application:
+   **python project.py**
+  
+10. Open http://localhost:5000/ in any Web browser.
