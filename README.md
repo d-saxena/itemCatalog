@@ -28,27 +28,27 @@ It is an application that provides a list of books within a variety of categorie
 - Log into the VM with vagrant ssh
 
 ### Steps to run the project
-1 Clone the following repository : https://github.com/d-saxena/itemCatalog 
+1. Clone the following repository : https://github.com/d-saxena/itemCatalog 
 
 2. Copy the itemCatalog into the FSND_Virtual_Machine/vagrant directory that you have created before.
 
 3. Open a terminal from the FSND_Virtual_Machine/vagrant directory, or simply open a terminal window and cd into that directory.
 
-4. Run vagrant ssh to log in to the VM.
-   **vagrant ssh**
+4. Run vagrant ssh to log in to the VM
+   <span style="background-color: #FFFF00">vagrant ssh</span>
 
 5. cd to the vagrant subdirectory
-   **cd /vagrant**
+   <span style="background-color: #FFFF00">cd /vagrant</span>
 
 6. cd to the cloned directory
 
 7. Run the following command to setup the DB:
-   **python database_setup.py**
+   <span style="background-color: #FFFF00">python database_setup.py</span>
   
 8. Run the following command to insert books into your DB.
-   **python database_insert.py**
+   <span style="background-color: #FFFF00">python database_insert.py</span>
   
 9. Run the application:
-   **python project.py**
+   <span style="background-color: #FFFF00">python application.py</span>
   
 10. Open http://localhost:5000/ in any Web browser.
