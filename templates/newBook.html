@@ -1,0 +1,50 @@
+{% extends "bookStoreMainPage.html" %}
+{% block content %}
+{% include "bookStoreHeader.html" %}
+	<div class="row divider green">
+		<div class="col-md-12"></div>
+	</div>
+	<div class="row banner menu">
+		<div class="col-md-11 col-md-offset-1 padding-none">
+			<h1>New Book</h1>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-md-6 col-md-offset-1 padding-top">
+			<form action="#" method = "post">
+				<div class="form-group">
+					<label for="name">Name:</label>
+					<input type ="text" maxlength="50" class="form-control" name="name"placeholder="Name of the book" required>
+
+					<label for="description">Description:</label>
+					<textarea class="form-control" maxlength="250" rows="3" name="description" placeholder="Description of the book"></textarea>
+
+					<label for="price">Price:</label>
+					<div class="input-group">
+						<div class="input-group-addon">$</div>
+						<input type ="text" class="form-control" maxlength="10" name="price" placeholder="Price in $" required>
+					</div>
+					<label for="language">Language:</label>
+					<div class="radio">
+					  <label>
+					    <input type="radio" name="language" id="language1" value="English">English
+					  </label>
+					</div>
+					<div class="radio">
+					  <label>
+					    <input type="radio" name="language" id="language2" value="Hindi">Hindi
+					  </label>
+					</div>
+					<div class="radio">
+					  <label>
+					    <input type="radio" name="language" id="language3" value="Urdu">Urdu
+					  </label>
+					</div>
+					<button type="submit" class="btn btn-default" id="submit" type="submit">
+							<span class="glyphicon glyphicon-file" aria-hidden="true"></span>Create
+					</button>
+				</div>
+			</form>
+		</div>
+	</div>
+{% endblock %}
