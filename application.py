@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect
 from flask import url_for, jsonify, flash
 from sqlalchemy import create_engine, asc
 from sqlalchemy.orm import sessionmaker
-from database_setup import Base, BookCategory, Book
+from database_setup import Base, BookCategory, Book, User
 from flask import session as login_session
 import random
 import string
@@ -103,9 +103,18 @@ def gconnect():
 
     data = answer.json()
 
-    login_session['username'] = data['name']
+    name = data['email'].split("@")
+    login_session['username'] = name[0]
     login_session['picture'] = data['picture']
     login_session['email'] = data['email']
+
+
+    # If user exists, if it doesn't make a new one
+    user_id = getUserID(data["email"])
+    if not user_id:
+        user_id = createUser(login_session)
+
+    login_session['user_id'] = user_id
 
     output = ''
     output += '<h1>Welcome, '
@@ -117,6 +126,32 @@ def gconnect():
     flash("you are now logged in as %s" % login_session['username'])
     print "done!"
     return output
+
+
+# To create new user
+def createUser(login_session):
+    newUser = User(name=login_session['username'],
+                   email=login_session['email'])
+    session.add(newUser)
+    user = session.query(User).filter_by(email=login_session['email']).one()
+    return user.id
+
+
+# To get user Information
+def getUserInfo(user_id):
+    user = session.query(User).filter_by(id=user_id).one()
+    return user
+
+
+# To get users information
+def getUserID(email):
+    try:
+        user = session.query(User).filter_by(email=email).one()
+        session.commit()
+        return user.id
+    except:
+        return None
+
 
 # Disconnects the already connected user
 @app.route('/gdisconnect')
@@ -141,12 +176,21 @@ def gdisconnect():
         del login_session['username']
         del login_session['email']
         del login_session['picture']
+        del login_session['user_id']
         flash("You have successfully been logged out.")
         return redirect(url_for('showBookCategories'))
     else:
         response = make_response(json.dumps('Failed to revoke token for given user.', 400))
         response.headers['Content-Type'] = 'application/json'
         return response
+
+
+# Show all users JSON file
+@app.route('/users/JSON')
+def showUsersJSON():
+    user = session.query(User).all()
+    return jsonify(user=[u.serialize for u in user])        
+
 
 # Returns the JSON of the books for a category
 @app.route('/bookCategory/<int:bookCategory_id>/books/JSON')
@@ -191,7 +235,7 @@ def newBookCategory():
     if request.method == 'POST':
         DBSession = sessionmaker(bind=engine)
         session = DBSession()
-        newBookCategory = BookCategory(name=request.form['name'])
+        newBookCategory = BookCategory(name=request.form['name'], user_id=login_session['user_id'])
         session.add(newBookCategory)
         flash('New Book Category %s Successfully Created' % newBookCategory.name)
         session.commit()
@@ -208,6 +252,9 @@ def editBookCategory(bookCategory_id):
     session = DBSession()        
     editedBookCategory = session.query(
         BookCategory).filter_by(id=bookCategory_id).one()
+    if editedBookCategory.user_id != login_session['user_id']:
+        return flash("You are not authorised to edit this Book Category.Please \
+        create your own Category in order to edit")
     if request.method == 'POST':
         if request.form['name']:
             editedBookCategory.name = request.form['name']
@@ -228,7 +275,10 @@ def deleteBookCategory(bookCategory_id):
     bookCategoryToDelete = session.query(
         BookCategory).filter_by(id=bookCategory_id).one()
     books = session.query(Book).filter_by(
-        bookCategory_id=bookCategory_id).all()          
+        bookCategory_id=bookCategory_id).all()
+    if bookCategoryToDelete.user_id != login_session['user_id']:
+        return flash("You are not authorised to delete this Book Category.Please \
+        create your own Category in order to delete")         
     if request.method == 'POST':
         for b in books:
             session.delete(b)
@@ -259,9 +309,13 @@ def newBook(bookCategory_id):
     DBSession = sessionmaker(bind=engine)
     session = DBSession()
     bookCategory = session.query(BookCategory).filter_by(id=bookCategory_id).one()
+    if login_session['user_id'] != bookCategory.user_id:
+        return "<script>function myFunction() {alert('You are not authorized \
+         to add Book to this Book Category. Please create your own Category in \
+         order to add book.');}</script><body onload='myFunction()'>"
     if request.method == 'POST':
         newBook = Book(name=request.form['name'], description=request.form[
-                           'description'], price=request.form['price'], language=request.form['language'], bookCategory_id=bookCategory_id)
+                           'description'], price=request.form['price'], language=request.form['language'], bookCategory_id=bookCategory_id,user_id=bookCategory.user_id)
         session.add(newBook)
         session.commit()
         flash('New Book %s Successfully Created' % (newBook.name))
@@ -278,6 +332,10 @@ def editBook(bookCategory_id, book_id):
     session = DBSession()
     editedBook = session.query(Book).filter_by(id=book_id).one()
     bookCategory = session.query(BookCategory).filter_by(id=bookCategory_id).one()
+    if login_session['user_id'] != bookCategory.user_id:
+        return "<script>function myFunction() {alert('You are not authorized \
+        to edit books of this category. Please create your own category\
+         in order to edit books.');}</script><body onload='myFunction()'>"
     if request.method == 'POST':
         if request.form['name']:
             editedBook.name = request.form['name']
@@ -303,6 +361,10 @@ def deleteBook(bookCategory_id, book_id):
     session = DBSession()    
     bookCategory = session.query(BookCategory).filter_by(id=bookCategory_id).one()
     bookToDelete = session.query(Book).filter_by(id=book_id).one()
+    if login_session['user_id'] != bookCategory.user_id:
+        return "<script>function myFunction() {alert('You are not authorized \
+        to delete book of this category. Please create your own category \
+        in order to delete books.');}</script><body onload='myFunction()'>"
     if request.method == 'POST':
         session.delete(bookToDelete)
         session.commit()
