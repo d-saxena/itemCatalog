@@ -1,9 +1,11 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, flash
+from flask import Flask, render_template, request, redirect
+from flask import url_for, jsonify, flash
 from sqlalchemy import create_engine, asc
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, BookCategory, Book
 from flask import session as login_session
-import random, string
+import random
+import string
 
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
@@ -32,6 +34,7 @@ def showLogin():
     login_session['state'] = state
     return render_template('bookStoreLogin.html', STATE=state)
 
+# Authentication using Google OAuth
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
     # Validate state token
@@ -115,6 +118,7 @@ def gconnect():
     print "done!"
     return output
 
+# Disconnects the already connected user
 @app.route('/gdisconnect')
 def gdisconnect():
     access_token = login_session.get('access_token')
@@ -144,6 +148,7 @@ def gdisconnect():
         response.headers['Content-Type'] = 'application/json'
         return response
 
+# Returns the JSON of the books for a category
 @app.route('/bookCategory/<int:bookCategory_id>/books/JSON')
 def bookCategoryJSON(bookCategory_id):
     DBSession = sessionmaker(bind=engine)
@@ -153,6 +158,7 @@ def bookCategoryJSON(bookCategory_id):
         bookCategory_id=bookCategory_id).all()
     return jsonify(Books=[i.serialize for i in books])
 
+# Returns the JSON of the particular book
 @app.route('/bookCategory/<int:bookCategory_id>/books/<int:book_id>/JSON')
 def bookJSON(bookCategory_id, book_id):
     DBSession = sessionmaker(bind=engine)
@@ -160,6 +166,7 @@ def bookJSON(bookCategory_id, book_id):
     book = session.query(Book).filter_by(id=book_id).one()
     return jsonify(Book=book.serialize)  
 
+# Returns the JSON of the all the book categories
 @app.route('/bookCategory/JSON')
 def bookCategoriesJSON():
     DBSession = sessionmaker(bind=engine)
@@ -167,6 +174,7 @@ def bookCategoriesJSON():
     bookCategories = session.query(BookCategory).all()
     return jsonify(BookCategories=[b.serialize for b in bookCategories])
 
+# Shows all the available book category
 @app.route('/')
 @app.route('/bookCategory/')
 def showBookCategories():
@@ -232,6 +240,7 @@ def deleteBookCategory(bookCategory_id):
     else:
         return render_template('deleteBookCategory.html', bookCategory=bookCategoryToDelete)        
 
+# Show books under a book category
 @app.route('/bookCategory/<int:bookCategory_id>/')
 @app.route('/bookCategory/<int:bookCategory_id>/books/')
 def showBooks(bookCategory_id):
@@ -242,7 +251,7 @@ def showBooks(bookCategory_id):
         bookCategory_id=bookCategory_id).all()
     return render_template('books.html', books=books, bookCategory=bookCategory)
 
-# Create a new book
+# Create a new book under a book category
 @app.route('/bookCategory/<int:bookCategory_id>/books/new/', methods=['GET', 'POST'])
 def newBook(bookCategory_id):
     if 'username' not in login_session:
@@ -260,7 +269,7 @@ def newBook(bookCategory_id):
     else:
         return render_template('newBook.html', bookCategory_id=bookCategory_id)
 
-# Edit a book
+# Edit a book under a book category
 @app.route('/bookCategory/<int:bookCategory_id>/books/<int:book_id>/edit', methods=['GET', 'POST'])
 def editBook(bookCategory_id, book_id):
     if 'username' not in login_session:
@@ -285,7 +294,7 @@ def editBook(bookCategory_id, book_id):
     else:
         return render_template('editBook.html', bookCategory_id=bookCategory_id, book_id=book_id, book=editedBook)
 
-# Delete a book
+# Delete a book under a book category
 @app.route('/bookCategory/<int:bookCategory_id>/books/<int:book_id>/delete', methods=['GET', 'POST'])
 def deleteBook(bookCategory_id, book_id):
     if 'username' not in login_session:
